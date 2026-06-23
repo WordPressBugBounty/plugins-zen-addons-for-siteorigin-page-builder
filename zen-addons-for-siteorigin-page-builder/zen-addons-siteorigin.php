@@ -2,7 +2,10 @@
 /*
  * Plugin Name: Zen Addons for SiteOrigin Page Builder
  * Description: Zen Addons is a collection of helpful widget extensions for SiteOrigin Page Builder. It's simple, flexible, and useful.
- * Version: 1.0.18
+ * Version: 1.1.0
+ * Requires at least: 5.5
+ * Requires PHP: 7.4
+ * Requires Plugins: so-widgets-bundle
  * Author: DopeThemes
  * Author URI: https://www.dopethemes.com/
  * Plugin URI: https://www.dopethemes.com/downloads/zen-addons-siteorigin/
@@ -38,7 +41,7 @@ if ( ! class_exists( 'zen_addons_siteorigin' ) ) :
 class zen_addons_siteorigin {
 
 	// vars
-	var $version = '1.0.18';
+	var $version = '1.1.0';
 
 	/**
 	 * A dummy constructor to ensure Zen Addons for SiteOrigin is only initialized once
@@ -80,8 +83,8 @@ class zen_addons_siteorigin {
 		define( 'ZASO_LIBRARY_PATH',      $this->settings['path'] . 'core/lib/' );
 		define( 'ZASO_WIDGET_BASIC_PATH', $this->settings['path'] . 'core/basic/' );
 
-		// Set text domain.
-		load_textdomain( 'zaso', ZASO_BASE_PATH . 'lang/zaso-' . get_locale() . '.mo' );
+		// Load the plugin text domain on init.
+		add_action( 'init', array( $this, 'load_textdomain' ) );
 
 		// Includes core.
 		include( 'core/helpers.php' );
@@ -93,6 +96,17 @@ class zen_addons_siteorigin {
 
 		// Plugin action links.
 		add_action( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
+	}
+
+	/**
+	 * Load the plugin text domain for translations.
+	 *
+	 * @type  function
+	 * @since 1.1.0
+	 * @return void
+	 */
+	function load_textdomain() {
+		load_plugin_textdomain( 'zaso', false, dirname( plugin_basename( __FILE__ ) ) . '/lang' );
 	}
 
 	/**

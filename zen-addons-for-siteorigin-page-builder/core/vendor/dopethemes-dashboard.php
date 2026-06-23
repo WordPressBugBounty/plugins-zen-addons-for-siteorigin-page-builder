@@ -45,11 +45,18 @@ if ( ! defined( 'DOPETHEMES_DASHBOARD_LOADED' ) ) {
          * @return array
          */
         public function get_dopethemes_posts() {
-			// Make a request to the REST API.
-			$response = wp_remote_get( 'https://www.dopethemes.com/wp-json/wp/v2/posts' );
+			// Serve from cache to avoid an external request on every admin page load.
+			$cached = get_transient( 'zaso_dopethemes_posts' );
+			if ( false !== $cached ) {
+				return $cached;
+			}
 
-			// Check for errors.
-			if( is_wp_error( $response ) ) {
+			// Make a request to the REST API, limiting fields and count for a lighter payload.
+			$response = wp_remote_get( 'https://www.dopethemes.com/wp-json/wp/v2/posts?per_page=3&_fields=link,title' );
+
+			// On failure, cache an empty result briefly so a slow/down endpoint cannot be hammered.
+			if ( is_wp_error( $response ) ) {
+				set_transient( 'zaso_dopethemes_posts', array(), HOUR_IN_SECONDS );
 				return array();
 			}
 
@@ -57,12 +64,14 @@ if ( ! defined( 'DOPETHEMES_DASHBOARD_LOADED' ) ) {
 			$posts = json_decode( wp_remote_retrieve_body( $response ), true );
 
 			// Check if we have posts.
-			if( empty( $posts ) ) {
+			if ( empty( $posts ) || ! is_array( $posts ) ) {
+				set_transient( 'zaso_dopethemes_posts', array(), HOUR_IN_SECONDS );
 				return array();
 			}
 
-			// Get the latest 3 posts.
+			// Get the latest 3 posts and cache them for 12 hours.
 			$posts = array_slice( $posts, 0, 3 );
+			set_transient( 'zaso_dopethemes_posts', $posts, 12 * HOUR_IN_SECONDS );
 
 			return $posts;
 		}
@@ -94,6 +103,12 @@ if ( ! defined( 'DOPETHEMES_DASHBOARD_LOADED' ) ) {
          * @return void
          */
 		public function print_dashboard_script() {
+            // Only run on the main Dashboard screen, not on every admin page.
+            $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+            if ( ! $screen || 'dashboard' !== $screen->id ) {
+                return;
+            }
+
             $dismissed = get_option( 'dopethemes_dismissed', false );
             if ( $dismissed ) return;
 
@@ -126,7 +141,7 @@ if ( ! defined( 'DOPETHEMES_DASHBOARD_LOADED' ) ) {
 
 				echo 'function dismiss_dopethemes_news(event) {';
 				echo '  event.preventDefault();';
-				echo '  if (window.confirm("Are you sure you want to remove DopeThemes Tutorials forever?")) {';
+				echo '  if (window.confirm("' . esc_js( __( 'Are you sure you want to remove DopeThemes Tutorials forever?', 'zaso' ) ) . '")) {';
 				echo '    var item = event.target.parentElement;';
 				echo '    item.style.display = "none";';
 				echo '    fetch("' . $ajax_url . '", { method: "POST" });';
@@ -154,12 +169,12 @@ if ( ! defined( 'DOPETHEMES_DASHBOARD_LOADED' ) ) {
          * @return void
          */
         public function dismiss_dopethemes_posts() {
-            // Check nonce for security
+            // Check nonce for security.
             check_ajax_referer( 'dismiss_dopethemes_nonce' );
 
-            // Check user permissions
+            // Check user permissions.
             if ( ! current_user_can( 'manage_options' ) ) {
-                wp_die( __( 'You do not have sufficient permissions to perform this action.' ) );
+                wp_die( esc_html__( 'You do not have sufficient permissions to perform this action.', 'zaso' ) );
             }
 
             update_option( 'dopethemes_dismissed', true );
@@ -185,6 +200,15 @@ if ( ! defined( 'DOPETHEMES_DASHBOARD_LOADED' ) ) {
          * @return void
          */
         public function enable_dopethemes_posts() {
+			// Check nonce for security.
+			check_ajax_referer( 'enable_dopethemes_nonce' );
+
+			// Check user permissions.
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have sufficient permissions to perform this action.', 'zaso' ) );
+			}
+
+			delete_transient( 'zaso_dopethemes_posts' );
 			update_option( 'dopethemes_dismissed', false );
 			wp_die(); // This is required to terminate immediately and return a proper response.
 		}
