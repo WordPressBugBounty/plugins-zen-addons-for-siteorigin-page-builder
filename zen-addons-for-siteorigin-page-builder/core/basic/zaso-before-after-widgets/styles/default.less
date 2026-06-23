@@ -1,0 +1,142 @@
+@max_width: default;
+@border_radius: default;
+@handle_color: default;
+@handle_size: default;
+@divider_color: default;
+@divider_width: default;
+@label_bg: default;
+@label_color: default;
+
+// Base layout (single-class rules; safe to nest with one "&").
+.zaso-before-after {
+  max-width: @max_width;
+  margin-left: auto;
+  margin-right: auto;
+
+  &__placeholder {
+    padding: 1.5em;
+    text-align: center;
+    background: #f1f5f9;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  &__container {
+    position: relative;
+    overflow: hidden;
+    border-radius: @border_radius;
+    line-height: 0;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: none;
+  }
+
+  &__img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  // The clip-path that reveals the "before" image is set inline (server) and
+  // updated by JS. A safe default is provided here for the no-JS case.
+  &__before-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    clip-path: inset(0 50% 0 0);
+  }
+
+  &__label {
+    position: absolute;
+    z-index: 2;
+    background: @label_bg;
+    color: @label_color;
+    padding: 0.3em 0.7em;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
+  &__label--before {
+    top: 0.75em;
+    left: 0.75em;
+  }
+
+  &__label--after {
+    top: 0.75em;
+    right: 0.75em;
+  }
+
+  &__handle {
+    position: absolute;
+    z-index: 3;
+    width: @handle_size;
+    height: @handle_size;
+    margin: 0;
+    padding: 0;
+    border: 2px solid @handle_color;
+    border-radius: 50%;
+    background: @handle_color;
+    box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.2), 0 2px 6px rgba(15, 23, 42, 0.3);
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+  }
+
+  &__handle:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 2px;
+  }
+
+  // Divider line, drawn from the handle and clipped by the container.
+  &__handle::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    background: @divider_color;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  &__handle-icon {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// Orientation-specific rules are written FLAT (literal classes, no chained "&")
+// so SiteOrigin's per-widget scoping prefixes them exactly once and they match.
+// The moving axis (left for horizontal, top for vertical) is set inline by JS.
+.zaso-before-after__container--horizontal .zaso-before-after__handle {
+  top: 50%;
+  cursor: ew-resize;
+}
+
+.zaso-before-after__container--vertical .zaso-before-after__handle {
+  left: 50%;
+  cursor: ns-resize;
+}
+
+.zaso-before-after__container--horizontal .zaso-before-after__handle::before {
+  width: @divider_width;
+  height: 9999px;
+}
+
+.zaso-before-after__container--vertical .zaso-before-after__handle::before {
+  height: @divider_width;
+  width: 9999px;
+}
+
+.zaso-before-after__container--vertical .zaso-before-after__label--after {
+  top: auto;
+  right: auto;
+  bottom: 0.75em;
+  left: 0.75em;
+}
