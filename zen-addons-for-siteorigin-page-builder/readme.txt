@@ -4,7 +4,7 @@ Tags: siteorigin, page builder, widgets, siteorigin widgets, addons
 Requires at least: 5.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.5.0
 License: GPLv3
 License URI: https://www.dopethemes.com/gplv3/
 
@@ -53,6 +53,16 @@ Zen Addons plugs directly into Page Builder by SiteOrigin and the SiteOrigin Wid
 * Countdown: count down to a date and time for launches, sales, and events.
 * Before / After: compare two images with a draggable slider, with mouse, touch, and keyboard support.
 
+**People and social proof**
+
+* Team Member: display a grid of team members with photos, roles, bios, and social links.
+* Testimonial Slider: show a rotating set of testimonials with auto-play, swipe, and keyboard support.
+
+**Content blocks**
+
+* Services Grid: present services or features in a grid, each with an icon, title, description, and optional link.
+* Progress Bars: show labeled progress or skill bars that fill as they scroll into view.
+
 **Community (bbPress)**
 
 * bbPress Forum Index: show the full bbPress forum index in your layout.
@@ -72,7 +82,7 @@ Zen Addons widgets are SiteOrigin widgets, so they appear in two places:
 1. Inside **Page Builder**, click **Add Widget** and open the **ZASO Widgets** tab.
 2. Under **Plugins > SiteOrigin Widgets**, where you can turn individual widgets on or off.
 
-Zen Addons does not add its own top-level admin menu, and the widgets are not listed under Appearance > Widgets, because they are built specifically for the SiteOrigin builder.
+You can also manage every Zen Addons widget from one place under the **Zen Addons** menu in your WordPress admin sidebar. The widgets are not listed under Appearance > Widgets, because they are built specifically for the SiteOrigin builder.
 
 = Standards =
 
@@ -92,6 +102,12 @@ Zen Addons does not add its own top-level admin menu, and the widgets are not li
 * English (en_US)
 * English (Australia) (en_AU)
 
+= Zen Addons Pro (coming soon) =
+
+A Pro tier is in active development and will add premium widgets not found in the free plugin, including a pricing table, WooCommerce product showcase, and portfolio grid, plus more advanced layout options. Early pricing starts at $29 per year for a single site.
+
+To get notified when Pro launches, visit https://www.dopethemes.com/downloads/zen-addons-siteorigin/ .
+
 == External services ==
 
 This plugin connects to the DopeThemes website to show a short list of recent DopeThemes posts inside the WordPress dashboard news area, so you can see helpful tutorials and product news.
@@ -102,25 +118,17 @@ This service is provided by DopeThemes. Terms of service: https://www.dopethemes
 
 == Installation ==
 
-= Automatic installation =
-
-1. Log in to your WordPress admin.
-2. Go to **Plugins > Add New**.
-3. Search for **Zen Addons for SiteOrigin Page Builder**.
-4. Click **Install Now**, then **Activate**.
-5. Make sure Page Builder by SiteOrigin and the SiteOrigin Widgets Bundle are also installed and active.
+1. In your WordPress admin, go to **Plugins > Add New** and search for **Zen Addons for SiteOrigin Page Builder**.
+2. Click **Install Now**, then **Activate**.
+3. Install and activate **Page Builder by SiteOrigin** and the **SiteOrigin Widgets Bundle** (both free). Zen Addons needs the Widgets Bundle and will prompt you to install it if it is missing.
+4. Edit any page with Page Builder, click **Add Widget**, and open the **ZASO Widgets** tab to add Zen Addons widgets.
+5. Visit **Plugins > SiteOrigin Widgets**, or the **Zen Addons** menu in your admin sidebar, to turn individual widgets on or off.
 
 = Manual installation =
 
 1. Download the plugin zip file.
-2. Go to **Plugins > Add New > Upload Plugin**.
-3. Choose the zip file and click **Install Now**.
-4. Activate the plugin.
-
-= After activation =
-
-* Edit a page with Page Builder, click **Add Widget**, and open the **ZASO Widgets** tab.
-* Visit **Plugins > SiteOrigin Widgets** to enable or disable individual Zen Addons widgets. We recommend activating only the widgets you need.
+2. Go to **Plugins > Add New > Upload Plugin**, choose the zip file, and click **Install Now**.
+3. Activate the plugin, then follow steps 3 to 5 above.
 
 == Frequently Asked Questions ==
 
@@ -130,11 +138,11 @@ Yes. Zen Addons extends the SiteOrigin Widgets Bundle, which provides the widget
 
 = Where do the widgets show up after I activate the plugin? =
 
-Zen Addons widgets appear in the SiteOrigin Page Builder widget picker under the **ZASO Widgets** tab, and in the manage screen at **Plugins > SiteOrigin Widgets**. They are not listed under Appearance > Widgets and there is no separate Zen Addons admin menu, because they are SiteOrigin widgets.
+Zen Addons widgets appear in the SiteOrigin Page Builder widget picker under the **ZASO Widgets** tab, and in the manage screen at **Plugins > SiteOrigin Widgets**. You can also activate or deactivate them from the **Zen Addons** menu in your WordPress admin sidebar. They are not listed under Appearance > Widgets, because they are SiteOrigin widgets.
 
 = How do I enable or disable individual widgets? =
 
-Go to **Plugins > SiteOrigin Widgets**. Each Zen Addons widget (prefixed with "ZASO -") can be turned on or off there. Activating only the widgets you use keeps things tidy.
+Go to the **Zen Addons** menu in your WordPress admin sidebar, or to **Plugins > SiteOrigin Widgets**. Each Zen Addons widget (prefixed with "ZASO -") can be turned on or off from either place. Activating only the widgets you use keeps things tidy.
 
 = Will Zen Addons slow down my site? =
 
@@ -176,10 +184,20 @@ Please read the Frequently Asked Questions before opening a support request, and
 
 == Screenshots ==
 
-1. The Zen Addons admin page: activate or deactivate any widget from one place, grouped by category.
-2. The four widgets added in version 1.3.0: Call to Action, Counter, Countdown, and Before / After.
+1. Conversion and engagement widgets: Call to Action, Counter, Countdown, and Before / After.
+2. Business and marketing widgets: Info Box, Hover Card, Icon, and Image Icon Group.
+3. Media widgets: Video, YouTube Lightbox, and Vimeo Lightbox.
+4. Interactive widgets: Simple Accordion and Basic Tabs.
+5. People and social proof widgets: Team Member and Testimonial Slider.
+6. Content block widgets: Services Grid and Progress Bars.
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+Adds two new widgets: Services Grid and Progress Bars.
+
+= 1.4.0 =
+Adds two new widgets: Team Member grid and Testimonial Slider.
 
 = 1.3.0 =
 Adds four new widgets: Call to Action, Counter, Countdown, and Before / After.
@@ -194,6 +212,14 @@ Compatibility update for WordPress 7.0, plus security hardening and performance 
 This update includes minor improvements and bug fixes.
 
 == Changelog ==
+
+= 1.5.0 =
+* New: Services Grid widget to present services or features with an icon, title, description, and optional link.
+* New: Progress Bars widget for labeled progress or skill bars that fill as they scroll into view.
+
+= 1.4.0 =
+* New: Team Member widget to display a grid of team members with photos, roles, bios, and social links.
+* New: Testimonial Slider widget with auto-play, swipe support, star ratings, and keyboard navigation.
 
 = 1.3.0 =
 * New: Call to Action widget for a heading, text, and button over a color, gradient, or image background.
