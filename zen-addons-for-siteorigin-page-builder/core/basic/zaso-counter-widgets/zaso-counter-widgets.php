@@ -8,6 +8,56 @@ if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly.
  * Author URI: https://www.dopethemes.com/
  */
 
+if ( ! function_exists( 'zaso_counter_design_options' ) ) :
+	/**
+	 * Curated "designs" for the Counter widget.
+	 *
+	 * The free core ships six ready-made designs inline; Zen Addons Pro appends
+	 * its twenty-four additional designs via the shared `zaso_counter_designs`
+	 * filter (the Pro controller self-gates on a valid license, so an unlicensed
+	 * or lapsed site only ever sees the six free entries). The empty-string key
+	 * is the classic stacked counter and adds no class, keeping every existing
+	 * instance byte-identical.
+	 *
+	 * @return array Map of design id => human label.
+	 */
+	function zaso_counter_design_options() {
+		$zaso_counter_free_designs = array(
+			''          => __( 'Default (classic counter)', 'zaso' ),
+			'icon-card' => __( 'Icon Card (success)', 'zaso' ),
+			'centered'  => __( 'Centered (info)', 'zaso' ),
+			'icon-top'  => __( 'Icon Top (installs)', 'zaso' ),
+			'badge'     => __( 'Badge (uptime)', 'zaso' ),
+			'divider'   => __( 'Divider (neutral)', 'zaso' ),
+			'underline' => __( 'Underline (rating)', 'zaso' ),
+		);
+
+		return apply_filters( 'zaso_counter_designs', $zaso_counter_free_designs );
+	}
+endif;
+
+if ( ! function_exists( 'zaso_counter_design_description' ) ) :
+	/**
+	 * Help text for the "Pre-made Design" field.
+	 *
+	 * On a white-labelled Pro site the agency's client must never see the real
+	 * product name or an upsell (they already have the full library), so the brand
+	 * + "unlocks twenty-four more" sentence is dropped. Everywhere else (free, or
+	 * licensed-but-not-white-labelled) the upsell line is kept.
+	 *
+	 * @return string Field description.
+	 */
+	function zaso_counter_design_description() {
+		$white_label = class_exists( 'Zanp_Settings' ) && Zanp_Settings::is_white_label();
+
+		if ( $white_label ) {
+			return __( 'One-click, fully styled looks. Click "Browse designs" to preview every design and pick one visually. Leave on "Default (classic counter)" to build your own look with the Layout, Style and Design colour settings instead.', 'zaso' );
+		}
+
+		return __( 'One-click, fully styled looks. Click "Browse designs" to preview every design and pick one visually. The free core ships six; Zen Addons Pro unlocks twenty-four more (license required). Leave on "Default (classic counter)" to build your own look with the Layout, Style and Design colour settings instead.', 'zaso' );
+	}
+endif;
+
 if ( ! class_exists( 'Zen_Addons_SiteOrigin_Counter_Widget' ) ) :
 
 
@@ -87,7 +137,7 @@ class Zen_Addons_SiteOrigin_Counter_Widget extends SiteOrigin_Widget {
 				'type'        => 'select',
 				'label'       => __( 'Layout', 'zaso' ),
 				'default'     => 'default',
-				'description' => __( 'Structural layout of the counter. The Style skin below still controls colours and sizes; Layout controls the shape (stacked, boxed card, inline row, ringed circle).', 'zaso' ),
+				'description' => __( 'The structural shape of the counter: stacked, boxed card, inline row or ringed circle. Layout sets the frame; Style (below) sets the colours.', 'zaso' ),
 				'options'     => array(
 					'default' => __( 'Default (stacked)', 'zaso' ),
 					'card'    => __( 'Card (boxed, soft shadow)', 'zaso' ),
@@ -95,83 +145,16 @@ class Zen_Addons_SiteOrigin_Counter_Widget extends SiteOrigin_Widget {
 					'circle'  => __( 'Circle (number in a ring)', 'zaso' ),
 				),
 			),
-			'design_style' => array(
-				'type'           => 'presets',
-				'label'          => __( 'Style', 'zaso' ),
-				'default_preset' => '',
-				/**
-				 * Curated design presets ("skins") for this widget. The free core
-				 * ships four; Zen Addons Pro appends its full library via the
-				 * shared `zaso_design_presets` filter (gated on a valid license).
-				 * Selecting one fills the Design fields below; users can still tweak.
-				 *
-				 * The Counter widget has no background, border, radius, or padding
-				 * fields, so these skins style the number, title, and icon colours
-				 * and sizes against the page background. Every colour clears WCAG AA
-				 * (>= 4.5:1) on a light background.
-				 */
-				'options'        => apply_filters( 'zaso_design_presets', array(
-					'saas_indigo'   => array(
-						'label'  => __( 'Indigo', 'zaso' ),
-						'values' => array(
-							'design' => array(
-								'alignment'    => 'center',
-								'number_color' => '#4f46e5',
-								'number_size'  => '3.5rem',
-								'title_color'  => '#475569',
-								'title_size'   => '1.125rem',
-								'icon_color'   => '#4f46e5',
-								'icon_size'    => '2.75rem',
-							),
-						),
-					),
-					'dark_midnight' => array(
-						'label'  => __( 'Midnight', 'zaso' ),
-						'values' => array(
-							'design' => array(
-								'alignment'    => 'center',
-								'number_color' => '#0f172a',
-								'number_size'  => '3rem',
-								'title_color'  => '#475569',
-								'title_size'   => '1rem',
-								'icon_color'   => '#4f46e5',
-								'icon_size'    => '2.5rem',
-							),
-						),
-					),
-					'min_mono'      => array(
-						'label'  => __( 'Mono', 'zaso' ),
-						'values' => array(
-							'design' => array(
-								'alignment'    => 'left',
-								'number_color' => '#111111',
-								'number_size'  => '3rem',
-								'title_color'  => '#6b7280',
-								'title_size'   => '1rem',
-								'icon_color'   => '#111111',
-								'icon_size'    => '2.5rem',
-							),
-						),
-					),
-					'bold_sunset'   => array(
-						'label'  => __( 'Sunset', 'zaso' ),
-						'values' => array(
-							'design' => array(
-								'alignment'    => 'center',
-								'number_color' => '#c2410c',
-								'number_size'  => '3.5rem',
-								'title_color'  => '#9a3412',
-								'title_size'   => '1.125rem',
-								'icon_color'   => '#c2410c',
-								'icon_size'    => '3rem',
-							),
-						),
-					),
-				), 'counter' ),
+			'design_variant' => array(
+				'type'        => 'select',
+				'label'       => __( 'Pre-made Design', 'zaso' ),
+				'default'     => '',
+				'description' => zaso_counter_design_description(),
+				'options'     => zaso_counter_design_options(),
 			),
 			'design' => array(
 				'type'   => 'section',
-				'label'  => __( 'Design', 'zaso' ),
+				'label'  => __( 'Design (custom colours)', 'zaso' ),
 				'hide'   => true,
 				'fields' => array(
 					'alignment' => array(
