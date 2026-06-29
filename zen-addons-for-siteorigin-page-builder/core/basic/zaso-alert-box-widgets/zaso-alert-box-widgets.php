@@ -8,6 +8,56 @@ if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly.
  * Author URI: https://www.dopethemes.com/
  */
 
+if ( ! function_exists( 'zaso_alert_box_design_options' ) ) :
+	/**
+	 * Curated "designs" for the Alert Box widget.
+	 *
+	 * The free core ships six ready-made designs inline; Zen Addons Pro appends
+	 * its twenty-four additional designs via the shared `zaso_alert_designs`
+	 * filter (the Pro controller self-gates on a valid license, so an unlicensed
+	 * or lapsed site only ever sees the six free entries). The empty-string key
+	 * is the classic "Default" box and adds no class, keeping every existing
+	 * instance byte-identical.
+	 *
+	 * @return array Map of design id => human label.
+	 */
+	function zaso_alert_box_design_options() {
+		$zaso_alert_box_free_designs = array(
+			''            => __( 'Default (classic box)', 'zaso' ),
+			'left-accent' => __( 'Left Accent (success)', 'zaso' ),
+			'soft-tint'   => __( 'Soft Tint (info)', 'zaso' ),
+			'outlined'    => __( 'Outlined (warning)', 'zaso' ),
+			'icon-badge'  => __( 'Icon Badge Card (error)', 'zaso' ),
+			'top-bar'     => __( 'Top Bar (neutral)', 'zaso' ),
+			'solid'       => __( 'Solid Fill (info)', 'zaso' ),
+		);
+
+		return apply_filters( 'zaso_alert_designs', $zaso_alert_box_free_designs );
+	}
+endif;
+
+if ( ! function_exists( 'zaso_alert_box_design_description' ) ) :
+	/**
+	 * Help text for the "Pre-made Design" field.
+	 *
+	 * On a white-labelled Pro site the agency's client must never see the real
+	 * product name or an upsell (they already have the full library), so the brand
+	 * + "unlocks twenty-four more" sentence is dropped. Everywhere else (free, or
+	 * licensed-but-not-white-labelled) the upsell line is kept.
+	 *
+	 * @return string Field description.
+	 */
+	function zaso_alert_box_design_description() {
+		$white_label = class_exists( 'Zanp_Settings' ) && Zanp_Settings::is_white_label();
+
+		if ( $white_label ) {
+			return __( 'One-click, fully styled looks. Click "Browse designs" to preview every design and pick one visually. Leave on "Default (classic box)" to build your own look with the Layout, Style and Design colour settings instead.', 'zaso' );
+		}
+
+		return __( 'One-click, fully styled looks. Click "Browse designs" to preview every design and pick one visually. The free core ships six; Zen Addons Pro unlocks twenty-four more (license required). Leave on "Default (classic box)" to build your own look with the Layout, Style and Design colour settings instead.', 'zaso' );
+	}
+endif;
+
 if( ! class_exists( 'Zen_Addons_SiteOrigin_Alert_Box_Widget' ) ) :
 
 
@@ -34,6 +84,11 @@ class Zen_Addons_SiteOrigin_Alert_Box_Widget extends SiteOrigin_Widget {
 					'error'   => __( 'Error', 'zaso' ),
 				),
 			),
+			'custom_icon' => array(
+				'type'        => 'icon',
+				'label'       => __( 'Custom Icon', 'zaso' ),
+				'description' => __( 'Optional. Overrides the alert type / design icon.', 'zaso' ),
+			),
 			'alert_closebtn' => array(
 				'type'    => 'select',
 				'label'   => __( 'Close Button', 'zaso' ),
@@ -42,6 +97,16 @@ class Zen_Addons_SiteOrigin_Alert_Box_Widget extends SiteOrigin_Widget {
 					'show'  => __( 'Show', 'zaso' ),
 					'hide' => __( 'Hide', 'zaso' ),
 				)
+			),
+			'width' => array(
+				'type'        => 'select',
+				'label'       => __( 'Width', 'zaso' ),
+				'default'     => 'full',
+				'description' => __( 'Full width fills the container; Content width shrinks to fit the message.', 'zaso' ),
+				'options'     => array(
+					'full'    => __( 'Full width', 'zaso' ),
+					'content' => __( 'Content width', 'zaso' ),
+				),
 			),
 			'extra_id' => array(
 				'type'  => 'text',
@@ -53,9 +118,113 @@ class Zen_Addons_SiteOrigin_Alert_Box_Widget extends SiteOrigin_Widget {
 				'label' => __( 'Extra Class', 'zaso' ),
 				'description' => __( 'Add an extra class for styling overrides.', 'zaso' ),
 			),
+			'layout' => array(
+				'type'        => 'select',
+				'label'       => __( 'Layout', 'zaso' ),
+				'default'     => 'default',
+				'description' => __( 'The structural shape of the alert: border, shadow, padding and icon placement. Layout sets the frame; Style (below) sets the colours.', 'zaso' ),
+				'options'     => array(
+					'default'     => __( 'Default (bordered box)', 'zaso' ),
+					'card'        => __( 'Card (elevated, soft shadow)', 'zaso' ),
+					'left-accent' => __( 'Left Accent (flat bar)', 'zaso' ),
+					'banner'      => __( 'Banner (horizontal band)', 'zaso' ),
+				),
+			),
+			'design_style' => array(
+				'type'           => 'presets',
+				'label'          => __( 'Style', 'zaso' ),
+				'default_preset' => '',
+				/**
+				 * Curated design presets ("skins") for this widget. The free core
+				 * ships three; Zen Addons Pro appends its full library via the
+				 * shared `zaso_design_presets` filter (gated on a valid license).
+				 * Selecting one fills the Design fields below; users can still tweak.
+				 */
+				'options'        => apply_filters( 'zaso_design_presets', array(
+					'saas_indigo' => array(
+						'label'  => __( 'Indigo', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'message_box' => array(
+									'message_background_color' => '#ffffff',
+									'message_font_color'       => '#0f172a',
+									'message_font_size'        => '1rem',
+									'message_padding'          => array( 'top' => '14px', 'right' => '16px', 'bottom' => '14px', 'left' => '16px' ),
+									'message_border'           => array(
+										'bw_top' => '1px', 'bw_right' => '1px', 'bw_bottom' => '1px', 'bw_left' => '1px',
+										'br_top' => '8px', 'br_right' => '8px', 'br_bottom' => '8px', 'br_left' => '8px',
+										'border_style' => 'solid', 'border_color' => '#e2e8f0',
+									),
+								),
+							),
+						),
+					),
+					'dark_midnight' => array(
+						'label'  => __( 'Midnight', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'message_box' => array(
+									'message_background_color' => '#0f172a',
+									'message_font_color'       => '#e2e8f0',
+									'message_font_size'        => '1rem',
+									'message_padding'          => array( 'top' => '16px', 'right' => '18px', 'bottom' => '16px', 'left' => '18px' ),
+									'message_border'           => array(
+										'bw_top' => '1px', 'bw_right' => '1px', 'bw_bottom' => '1px', 'bw_left' => '1px',
+										'br_top' => '10px', 'br_right' => '10px', 'br_bottom' => '10px', 'br_left' => '10px',
+										'border_style' => 'solid', 'border_color' => '#334155',
+									),
+								),
+							),
+						),
+					),
+					'min_mono' => array(
+						'label'  => __( 'Mono', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'message_box' => array(
+									'message_background_color' => '#ffffff',
+									'message_font_color'       => '#111111',
+									'message_font_size'        => '1rem',
+									'message_padding'          => array( 'top' => '14px', 'right' => '16px', 'bottom' => '14px', 'left' => '16px' ),
+									'message_border'           => array(
+										'bw_top' => '1px', 'bw_right' => '1px', 'bw_bottom' => '1px', 'bw_left' => '1px',
+										'br_top' => '6px', 'br_right' => '6px', 'br_bottom' => '6px', 'br_left' => '6px',
+										'border_style' => 'solid', 'border_color' => '#e5e5e5',
+									),
+								),
+							),
+						),
+					),
+					'bold_sunset' => array(
+						'label'  => __( 'Sunset', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'message_box' => array(
+									'message_background_color' => '#fff7ed',
+									'message_font_color'       => '#7c2d12',
+									'message_font_size'        => '1rem',
+									'message_padding'          => array( 'top' => '14px', 'right' => '16px', 'bottom' => '14px', 'left' => '16px' ),
+									'message_border'           => array(
+										'bw_top' => '1px', 'bw_right' => '1px', 'bw_bottom' => '1px', 'bw_left' => '1px',
+										'br_top' => '8px', 'br_right' => '8px', 'br_bottom' => '8px', 'br_left' => '8px',
+										'border_style' => 'solid', 'border_color' => '#fed7aa',
+									),
+								),
+							),
+						),
+					),
+				), 'alert-box' ),
+			),
+			'design_variant' => array(
+				'type'        => 'select',
+				'label'       => __( 'Pre-made Design', 'zaso' ),
+				'default'     => '',
+				'description' => zaso_alert_box_design_description(),
+				'options'     => zaso_alert_box_design_options(),
+			),
 			'design' => array(
 				'type' =>  'section',
-				'label' => __( 'Design', 'zaso' ),
+				'label' => __( 'Design (custom colours)', 'zaso' ),
 				'hide' => true,
 				'fields' => array(
 					'message_box' => array(
@@ -227,40 +396,46 @@ class Zen_Addons_SiteOrigin_Alert_Box_Widget extends SiteOrigin_Widget {
 
 	function get_less_variables( $instance ) {
 
-		// variable pointers
-		$design = $instance['design'];
-		$message_box = $design['message_box'];
-		$message_margin = $message_box['message_margin'];
-		$message_padding = $message_box['message_padding'];
-		$message_border = $message_box['message_border'];
+		// Defensive: a design_style preset may fill only some of the message_box
+		// sub-fields (e.g. colours + padding + border, but not margin). Default
+		// any missing piece so a partially-filled design can never crash the LESS
+		// output. A fully-saved Default instance already carries every key, so its
+		// output is unchanged (these fallbacks only apply to absent keys).
+		$design      = isset( $instance['design'] ) && is_array( $instance['design'] ) ? $instance['design'] : array();
+		$message_box = isset( $design['message_box'] ) && is_array( $design['message_box'] ) ? $design['message_box'] : array();
+
+		$margin  = wp_parse_args(
+			( isset( $message_box['message_margin'] ) && is_array( $message_box['message_margin'] ) ) ? $message_box['message_margin'] : array(),
+			array( 'top' => '0px', 'right' => '0px', 'bottom' => '0px', 'left' => '0px' )
+		);
+		$padding = wp_parse_args(
+			( isset( $message_box['message_padding'] ) && is_array( $message_box['message_padding'] ) ) ? $message_box['message_padding'] : array(),
+			array( 'top' => '1em', 'right' => '2.3em', 'bottom' => '1em', 'left' => '1.2em' )
+		);
+		$border  = wp_parse_args(
+			( isset( $message_box['message_border'] ) && is_array( $message_box['message_border'] ) ) ? $message_box['message_border'] : array(),
+			array(
+				'bw_top' => '1px', 'bw_right' => '1px', 'bw_bottom' => '1px', 'bw_left' => '1px',
+				'br_top' => '0px', 'br_right' => '0px', 'br_bottom' => '0px', 'br_left' => '0px',
+				'border_style' => 'solid', 'border_color' => '#dddfe2',
+			)
+		);
 
 		return apply_filters( 'zaso_alert_box_less_variables', array(
 			// basic tabs title vars
-			'message_background_color' => $message_box['message_background_color'],
-			'message_font_color' => $message_box['message_font_color'],
-			'message_font_size' => $message_box['message_font_size'],
+			'message_background_color' => isset( $message_box['message_background_color'] ) ? $message_box['message_background_color'] : '#e7e8ea',
+			'message_font_color'       => isset( $message_box['message_font_color'] ) ? $message_box['message_font_color'] : '#464a4e',
+			'message_font_size'        => isset( $message_box['message_font_size'] ) ? $message_box['message_font_size'] : '1rem',
 			'message_margin' => sprintf( '%1$s %2$s %3$s %4$s',
-				$message_margin['top'],
-				$message_margin['right'],
-				$message_margin['bottom'],
-				$message_margin['left'] ),
+				$margin['top'], $margin['right'], $margin['bottom'], $margin['left'] ),
 			'message_padding' => sprintf( '%1$s %2$s %3$s %4$s',
-				$message_padding['top'],
-				$message_padding['right'],
-				$message_padding['bottom'],
-				$message_padding['left'] ),
+				$padding['top'], $padding['right'], $padding['bottom'], $padding['left'] ),
 			'message_border_width' => sprintf( '%1$s %2$s %3$s %4$s',
-				$message_border['bw_top'],
-				$message_border['bw_right'],
-				$message_border['bw_bottom'],
-				$message_border['bw_left'] ),
+				$border['bw_top'], $border['bw_right'], $border['bw_bottom'], $border['bw_left'] ),
 			'message_border_radius' => sprintf( '%1$s %2$s %3$s %4$s',
-				$message_border['br_top'],
-				$message_border['br_right'],
-				$message_border['br_bottom'],
-				$message_border['br_left'] ),
-			'message_border_style' => $message_border['border_style'],
-			'message_border_color' => $message_border['border_color'],
+				$border['br_top'], $border['br_right'], $border['br_bottom'], $border['br_left'] ),
+			'message_border_style' => $border['border_style'],
+			'message_border_color' => $border['border_color'],
 		) );
 
 	}
@@ -275,6 +450,22 @@ class Zen_Addons_SiteOrigin_Alert_Box_Widget extends SiteOrigin_Widget {
 					array( 'jquery' ),
 					ZASO_VERSION,
 					true,
+				)
+			)
+		);
+
+		// Self-hosted Material Symbols Rounded @font-face. The design variants render
+		// their per-variant glyph through this font via a ::before pseudo-element, so
+		// it must load whenever an Alert Box renders (this free widget renders both the
+		// six free designs and the twenty-four Pro designs). SiteOrigin enqueues this
+		// only on pages where the widget is present, and skips it if already enqueued.
+		$this->register_frontend_styles(
+			array(
+				array(
+					'zaso-material-symbols',
+					ZASO_BASE_DIR . 'assets/css/material-symbols.css',
+					array(),
+					ZASO_VERSION,
 				)
 			)
 		);

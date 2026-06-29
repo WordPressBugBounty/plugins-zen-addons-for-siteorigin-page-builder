@@ -83,6 +83,92 @@ class Zen_Addons_SiteOrigin_Counter_Widget extends SiteOrigin_Widget {
 				'label'       => __( 'Extra Class', 'zaso' ),
 				'description' => __( 'Add an extra class for styling overrides.', 'zaso' ),
 			),
+			'layout' => array(
+				'type'        => 'select',
+				'label'       => __( 'Layout', 'zaso' ),
+				'default'     => 'default',
+				'description' => __( 'Structural layout of the counter. The Style skin below still controls colours and sizes; Layout controls the shape (stacked, boxed card, inline row, ringed circle).', 'zaso' ),
+				'options'     => array(
+					'default' => __( 'Default (stacked)', 'zaso' ),
+					'card'    => __( 'Card (boxed, soft shadow)', 'zaso' ),
+					'inline'  => __( 'Inline (icon + number in a row)', 'zaso' ),
+					'circle'  => __( 'Circle (number in a ring)', 'zaso' ),
+				),
+			),
+			'design_style' => array(
+				'type'           => 'presets',
+				'label'          => __( 'Style', 'zaso' ),
+				'default_preset' => '',
+				/**
+				 * Curated design presets ("skins") for this widget. The free core
+				 * ships four; Zen Addons Pro appends its full library via the
+				 * shared `zaso_design_presets` filter (gated on a valid license).
+				 * Selecting one fills the Design fields below; users can still tweak.
+				 *
+				 * The Counter widget has no background, border, radius, or padding
+				 * fields, so these skins style the number, title, and icon colours
+				 * and sizes against the page background. Every colour clears WCAG AA
+				 * (>= 4.5:1) on a light background.
+				 */
+				'options'        => apply_filters( 'zaso_design_presets', array(
+					'saas_indigo'   => array(
+						'label'  => __( 'Indigo', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'alignment'    => 'center',
+								'number_color' => '#4f46e5',
+								'number_size'  => '3.5rem',
+								'title_color'  => '#475569',
+								'title_size'   => '1.125rem',
+								'icon_color'   => '#4f46e5',
+								'icon_size'    => '2.75rem',
+							),
+						),
+					),
+					'dark_midnight' => array(
+						'label'  => __( 'Midnight', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'alignment'    => 'center',
+								'number_color' => '#0f172a',
+								'number_size'  => '3rem',
+								'title_color'  => '#475569',
+								'title_size'   => '1rem',
+								'icon_color'   => '#4f46e5',
+								'icon_size'    => '2.5rem',
+							),
+						),
+					),
+					'min_mono'      => array(
+						'label'  => __( 'Mono', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'alignment'    => 'left',
+								'number_color' => '#111111',
+								'number_size'  => '3rem',
+								'title_color'  => '#6b7280',
+								'title_size'   => '1rem',
+								'icon_color'   => '#111111',
+								'icon_size'    => '2.5rem',
+							),
+						),
+					),
+					'bold_sunset'   => array(
+						'label'  => __( 'Sunset', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'alignment'    => 'center',
+								'number_color' => '#c2410c',
+								'number_size'  => '3.5rem',
+								'title_color'  => '#9a3412',
+								'title_size'   => '1.125rem',
+								'icon_color'   => '#c2410c',
+								'icon_size'    => '3rem',
+							),
+						),
+					),
+				), 'counter' ),
+			),
 			'design' => array(
 				'type'   => 'section',
 				'label'  => __( 'Design', 'zaso' ),
@@ -152,15 +238,20 @@ class Zen_Addons_SiteOrigin_Counter_Widget extends SiteOrigin_Widget {
 
 	function get_less_variables( $instance ) {
 
-		$design = $instance['design'];
+		// Defensive: a design_style preset fills the design fields, but default any
+		// missing key so a partially-filled preset can never emit a notice. A
+		// fully-saved Default instance already carries every key, so these
+		// fallbacks only apply to absent keys and its output is byte-identical.
+		// Fallback values equal the widget's own design field defaults.
+		$design = isset( $instance['design'] ) && is_array( $instance['design'] ) ? $instance['design'] : array();
 
 		return apply_filters( 'zaso_counter_less_variables', array(
-			'number_color' => $design['number_color'],
-			'number_size'  => $design['number_size'],
-			'title_color'  => $design['title_color'],
-			'title_size'   => $design['title_size'],
-			'icon_color'   => $design['icon_color'],
-			'icon_size'    => $design['icon_size'],
+			'number_color' => isset( $design['number_color'] ) ? $design['number_color'] : '#1e293b',
+			'number_size'  => isset( $design['number_size'] )  ? $design['number_size']  : '3rem',
+			'title_color'  => isset( $design['title_color'] )  ? $design['title_color']  : '#64748b',
+			'title_size'   => isset( $design['title_size'] )   ? $design['title_size']   : '1rem',
+			'icon_color'   => isset( $design['icon_color'] )   ? $design['icon_color']   : '#4f46e5',
+			'icon_size'    => isset( $design['icon_size'] )    ? $design['icon_size']    : '2.5rem',
 		) );
 
 	}
@@ -212,7 +303,7 @@ class Zen_Addons_SiteOrigin_Counter_Widget extends SiteOrigin_Widget {
 			'icon'          => $instance['icon'],
 			'image'         => $instance['image'],
 			'image_attr'    => $attr,
-			'alignment'     => $instance['design']['alignment'],
+			'alignment'     => isset( $instance['design']['alignment'] ) ? $instance['design']['alignment'] : 'center',
 			'formatted_end' => $formatted_end,
 		) );
 

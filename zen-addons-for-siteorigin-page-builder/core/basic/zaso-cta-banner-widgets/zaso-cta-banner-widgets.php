@@ -50,7 +50,7 @@ class Zen_Addons_SiteOrigin_Cta_Banner_Widget extends SiteOrigin_Widget {
 			),
 			'layout' => array(
 				'type'    => 'select',
-				'label'   => __( 'Layout', 'zaso' ),
+				'label'   => __( 'Button Placement', 'zaso' ),
 				'default' => 'stacked',
 				'options' => array(
 					'stacked' => __( 'Stacked (button below text)', 'zaso' ),
@@ -76,6 +76,156 @@ class Zen_Addons_SiteOrigin_Cta_Banner_Widget extends SiteOrigin_Widget {
 				'type'        => 'text',
 				'label'       => __( 'Extra Class', 'zaso' ),
 				'description' => __( 'Add an extra class for styling overrides.', 'zaso' ),
+			),
+			/**
+			 * Structural layout dimension (orthogonal to the colour skin). The
+			 * Style preset below still drives all colours; this only restructures
+			 * the banner shape (card elevation, split divider, centered measure).
+			 * Note: the key is `block_layout`, not `layout`, because `layout`
+			 * already ships as the button-placement (stacked / inline) control
+			 * above and must not be repurposed. The default value adds no class,
+			 * so existing instances render byte-identical.
+			 */
+			'block_layout' => array(
+				'type'        => 'select',
+				'label'       => __( 'Layout Structure', 'zaso' ),
+				'default'     => 'default',
+				'description' => __( 'Structural shape of the banner. The Style skin below still controls colours; this controls the layout (card elevation, split divider, centered measure). Independent of the button placement and text alignment options above.', 'zaso' ),
+				'options'     => array(
+					'default'  => __( 'Default (full-width band)', 'zaso' ),
+					'card'     => __( 'Card (elevated, rounded, shadow)', 'zaso' ),
+					'split'    => __( 'Split (content / action divided)', 'zaso' ),
+					'centered' => __( 'Centered (constrained spotlight)', 'zaso' ),
+				),
+			),
+			'design_style' => array(
+				'type'           => 'presets',
+				'label'          => __( 'Style', 'zaso' ),
+				'default_preset' => '',
+				/**
+				 * Curated design presets ("skins") for this widget. The free core
+				 * ships three; Zen Addons Pro appends its full library via the
+				 * shared `zaso_design_presets` filter (gated on a valid license).
+				 * Selecting one fills the Design fields below; users can still tweak.
+				 */
+				'options'        => apply_filters( 'zaso_design_presets', array(
+					// Free subset of the DopeThemes premium palette (4 schemes,
+					// one per aesthetic family). Pro appends the full library.
+					'saas_indigo'   => array(
+						'label'  => __( 'Indigo', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'background' => array(
+									'bg_type' => 'gradient',
+									'bg_color' => '#ffffff',
+									'gradient_start' => '#ffffff',
+									'gradient_end' => '#eef2ff',
+									'gradient_angle' => 135,
+								),
+								'typography' => array(
+									'heading_color' => '#0f172a',
+									'subheading_color' => '#475569',
+									'text_color' => '#475569',
+								),
+								'button' => array(
+									'button_bg' => '#4f46e5',
+									'button_bg_hover' => '#4338ca',
+									'button_color' => '#ffffff',
+									'button_radius' => '8px',
+								),
+								'spacing' => array(
+									'padding_y' => '2.75rem',
+									'padding_x' => '2rem',
+									'border_radius' => '10px',
+								),
+							),
+						),
+					),
+					'dark_midnight'   => array(
+						'label'  => __( 'Midnight', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'background' => array(
+									'bg_type' => 'solid',
+									'bg_color' => '#0f172a',
+								),
+								'typography' => array(
+									'heading_color' => '#e2e8f0',
+									'subheading_color' => '#94a3b8',
+									'text_color' => '#94a3b8',
+								),
+								'button' => array(
+									'button_bg' => '#4f46e5',
+									'button_bg_hover' => '#4338ca',
+									'button_color' => '#ffffff',
+									'button_radius' => '10px',
+								),
+								'spacing' => array(
+									'padding_y' => '3rem',
+									'padding_x' => '2rem',
+									'border_radius' => '12px',
+								),
+							),
+						),
+					),
+					'min_mono'   => array(
+						'label'  => __( 'Mono', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'background' => array(
+									'bg_type' => 'solid',
+									'bg_color' => '#ffffff',
+								),
+								'typography' => array(
+									'heading_color' => '#111111',
+									'subheading_color' => '#6b7280',
+									'text_color' => '#6b7280',
+								),
+								'button' => array(
+									'button_bg' => '#111111',
+									'button_bg_hover' => '#000000',
+									'button_color' => '#ffffff',
+									'button_radius' => '6px',
+								),
+								'spacing' => array(
+									'padding_y' => '2.5rem',
+									'padding_x' => '2rem',
+									'border_radius' => '8px',
+								),
+							),
+						),
+					),
+					'bold_sunset'   => array(
+						'label'  => __( 'Sunset', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'background' => array(
+									'bg_type' => 'gradient',
+									'bg_color' => '#fff7ed',
+									'gradient_start' => '#fff7ed',
+									'gradient_end' => '#ffedd5',
+									'gradient_angle' => 135,
+								),
+								'typography' => array(
+									'heading_color' => '#7c2d12',
+									'subheading_color' => '#9a3412',
+									'text_color' => '#9a3412',
+								),
+								'button' => array(
+									'button_bg' => '#c2410c',
+									'button_bg_hover' => '#9a3412',
+									'button_color' => '#ffffff',
+									'button_radius' => '8px',
+								),
+								'spacing' => array(
+									'padding_y' => '2.75rem',
+									'padding_x' => '2rem',
+									'border_radius' => '12px',
+								),
+							),
+						),
+					),
+				), 'cta-banner' ),
 			),
 			'design' => array(
 				'type'   => 'section',
@@ -241,11 +391,53 @@ class Zen_Addons_SiteOrigin_Cta_Banner_Widget extends SiteOrigin_Widget {
 
 	function get_less_variables( $instance ) {
 
-		$design     = $instance['design'];
-		$background  = $design['background'];
-		$typography  = $design['typography'];
-		$button      = $design['button'];
-		$spacing     = $design['spacing'];
+		// Defensive: a design_style preset may fill only some of the design
+		// sub-fields (a solid skin omits the gradient + overlay keys, and every
+		// skin omits heading_size / subheading_size). Default any missing piece
+		// so a partially-filled preset can never crash or emit a notice. A
+		// fully-saved Default instance already carries every key, so these
+		// fallbacks only apply to keys a preset omitted and its output is
+		// byte-identical. Fallback values equal the widget's own field defaults.
+		$design     = isset( $instance['design'] ) && is_array( $instance['design'] ) ? $instance['design'] : array();
+		$background  = wp_parse_args(
+			( isset( $design['background'] ) && is_array( $design['background'] ) ) ? $design['background'] : array(),
+			array(
+				'bg_type'         => 'solid',
+				'bg_color'        => '#1e293b',
+				'gradient_start'  => '#4f46e5',
+				'gradient_end'    => '#1e293b',
+				'gradient_angle'  => 135,
+				'overlay_color'   => '#0f172a',
+				'overlay_opacity' => 60,
+			)
+		);
+		$typography  = wp_parse_args(
+			( isset( $design['typography'] ) && is_array( $design['typography'] ) ) ? $design['typography'] : array(),
+			array(
+				'heading_color'    => '#ffffff',
+				'heading_size'     => '2rem',
+				'subheading_color' => '#cbd5e1',
+				'subheading_size'  => '1.125rem',
+				'text_color'       => '#e2e8f0',
+			)
+		);
+		$button      = wp_parse_args(
+			( isset( $design['button'] ) && is_array( $design['button'] ) ) ? $design['button'] : array(),
+			array(
+				'button_bg'       => '#4f46e5',
+				'button_bg_hover' => '#4338ca',
+				'button_color'    => '#ffffff',
+				'button_radius'   => '6px',
+			)
+		);
+		$spacing     = wp_parse_args(
+			( isset( $design['spacing'] ) && is_array( $design['spacing'] ) ) ? $design['spacing'] : array(),
+			array(
+				'padding_y'     => '3rem',
+				'padding_x'     => '2rem',
+				'border_radius' => '0px',
+			)
+		);
 
 		// Compute the banner background from the chosen type. Image type is
 		// rendered as an inline style in the template, so LESS stays transparent.
@@ -287,7 +479,13 @@ class Zen_Addons_SiteOrigin_Cta_Banner_Widget extends SiteOrigin_Widget {
 
 	function get_template_variables( $instance, $args ) {
 
-		$background = $instance['design']['background'];
+		// Defensive: mirror get_less_variables so a partially-filled preset cannot
+		// crash the template build either. Defaults match the widget's own fields.
+		$design     = isset( $instance['design'] ) && is_array( $instance['design'] ) ? $instance['design'] : array();
+		$background  = isset( $design['background'] ) && is_array( $design['background'] ) ? $design['background'] : array();
+		if ( ! isset( $background['bg_type'] ) ) {
+			$background['bg_type'] = 'solid';
+		}
 
 		// Resolve the background image URL (used for the "image" background type).
 		$bg_image_url = '';

@@ -6,11 +6,30 @@ if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly.
  * @package Zen Addons for SiteOrigin Page Builder
  * @since 1.0.9
  */
-$hover_card_image = siteorigin_widgets_get_attachment_image_src( $instance['hover_card_image'], 'full' )[0];
+// Defensive: an unset / empty image field makes the SiteOrigin helper return
+// false, so guarding the [0] access avoids an "array offset on false" warning.
+// A real attachment yields the same URL as before (output byte-identical).
+$hover_card_image_src = ! empty( $instance['hover_card_image'] )
+	? siteorigin_widgets_get_attachment_image_src( $instance['hover_card_image'], 'full' )
+	: false;
+$hover_card_image     = ( is_array( $hover_card_image_src ) && isset( $hover_card_image_src[0] ) ) ? $hover_card_image_src[0] : '';
+
+// Optional structural layout. Default ('default') is the original caption overlay
+// and adds NO extra class, so existing instances render byte-identical. Only the
+// alternate layouts (caption-below / slide-up / zoom) add a modifier class.
+$zaso_layout         = ! empty( $instance['layout'] ) ? $instance['layout'] : 'default';
+$zaso_layout_allowed = array( 'default', 'caption-below', 'slide-up', 'zoom' );
+if ( ! in_array( $zaso_layout, $zaso_layout_allowed, true ) ) {
+	$zaso_layout = 'default';
+}
+$zaso_wrapper_class = 'zaso-hover-card';
+if ( 'default' !== $zaso_layout ) {
+	$zaso_wrapper_class .= ' zaso-hover-card--layout-' . $zaso_layout;
+}
 ?>
 
 <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- value is escaped with esc_attr() inside zaso_format_field_extra_id(). ?>
-<div <?php echo zaso_format_field_extra_id( $instance['extra_id'] ); ?> class="zaso-hover-card <?php echo esc_attr( $instance['extra_class'] ); ?>">
+<div <?php echo zaso_format_field_extra_id( $instance['extra_id'] ); ?> class="<?php echo esc_attr( $zaso_wrapper_class ); ?> <?php echo esc_attr( $instance['extra_class'] ); ?>">
   <div class="zaso-hover-card__box">
 
     <div class="zaso-hover-card__media">

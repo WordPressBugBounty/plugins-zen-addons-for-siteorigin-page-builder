@@ -8,6 +8,125 @@ if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly.
  * Author URI: https://www.dopethemes.com/
  */
 
+if ( ! function_exists( 'zaso_pricing_hex_to_rgb' ) ) {
+	/**
+	 * Parse a hex colour string into an [ R, G, B ] array (0-255 each).
+	 *
+	 * Accepts #rgb and #rrggbb (with or without the leading #). Returns null on
+	 * anything it cannot parse, so callers can fall back to the original value.
+	 *
+	 * @param string $hex Hex colour string.
+	 * @return array|null { @type int $0 Red, @type int $1 Green, @type int $2 Blue } or null.
+	 */
+	function zaso_pricing_hex_to_rgb( $hex ) {
+		$hex = ltrim( (string) $hex, '#' );
+
+		if ( 3 === strlen( $hex ) ) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+
+		if ( 6 !== strlen( $hex ) || ! ctype_xdigit( $hex ) ) {
+			return null;
+		}
+
+		return array(
+			hexdec( substr( $hex, 0, 2 ) ),
+			hexdec( substr( $hex, 2, 2 ) ),
+			hexdec( substr( $hex, 4, 2 ) ),
+		);
+	}
+}
+
+if ( ! function_exists( 'zaso_pricing_relative_luminance' ) ) {
+	/**
+	 * Compute the WCAG 2.1 sRGB relative luminance of an [ R, G, B ] colour.
+	 *
+	 * @param array $rgb { @type int $0 Red, @type int $1 Green, @type int $2 Blue } 0-255 each.
+	 * @return float Relative luminance in the range 0..1.
+	 */
+	function zaso_pricing_relative_luminance( $rgb ) {
+		$channels = array();
+
+		foreach ( $rgb as $value ) {
+			$c          = $value / 255;
+			$channels[] = ( $c <= 0.03928 ) ? ( $c / 12.92 ) : pow( ( ( $c + 0.055 ) / 1.055 ), 2.4 );
+		}
+
+		return ( 0.2126 * $channels[0] ) + ( 0.7152 * $channels[1] ) + ( 0.0722 * $channels[2] );
+	}
+}
+
+if ( ! function_exists( 'zaso_pricing_contrast_ratio' ) ) {
+	/**
+	 * WCAG contrast ratio between two relative luminances.
+	 *
+	 * @param float $lum_a First relative luminance (0..1).
+	 * @param float $lum_b Second relative luminance (0..1).
+	 * @return float Contrast ratio (1..21).
+	 */
+	function zaso_pricing_contrast_ratio( $lum_a, $lum_b ) {
+		$lighter = max( $lum_a, $lum_b );
+		$darker  = min( $lum_a, $lum_b );
+
+		return ( $lighter + 0.05 ) / ( $darker + 0.05 );
+	}
+}
+
+if ( ! function_exists( 'zaso_pricing_accessible_accent' ) ) {
+	/**
+	 * Return an accent colour guaranteed to be readable as a foreground on a
+	 * given surface (check icons, featured border, focus ring, elevated ring).
+	 *
+	 * If the supplied accent already meets the target contrast against the
+	 * surface it is returned UNCHANGED, byte-for-byte, so light skins and the
+	 * default (no-skin) instance compile to identical CSS. Only when the accent
+	 * fails, e.g. a dark indigo accent on a dark card, is it mixed toward white
+	 * (dark surface) or black (light surface) in 5% steps until it passes. The
+	 * button background keeps the original accent, so its already-validated label
+	 * contrast (button_text_color on button_bg) is never disturbed.
+	 *
+	 * @param string $accent  Accent hex colour (featured / icon foreground).
+	 * @param string $surface Card background hex colour the accent sits on.
+	 * @param float  $target  Minimum contrast ratio to reach. Default 3.5 (above
+	 *                        the WCAG 3:1 floor for non-text graphics, with margin).
+	 * @return string A hex colour that meets the target, or the original accent
+	 *                if it already passes or cannot be parsed.
+	 */
+	function zaso_pricing_accessible_accent( $accent, $surface, $target = 3.5 ) {
+		$accent_rgb  = zaso_pricing_hex_to_rgb( $accent );
+		$surface_rgb = zaso_pricing_hex_to_rgb( $surface );
+
+		if ( null === $accent_rgb || null === $surface_rgb ) {
+			return $accent;
+		}
+
+		$surface_lum = zaso_pricing_relative_luminance( $surface_rgb );
+		$accent_lum  = zaso_pricing_relative_luminance( $accent_rgb );
+
+		if ( zaso_pricing_contrast_ratio( $accent_lum, $surface_lum ) >= $target ) {
+			return $accent;
+		}
+
+		// Lighten toward white on dark surfaces; darken toward black on light ones.
+		$mix_to = ( $surface_lum < 0.5 ) ? 255 : 0;
+
+		for ( $step = 1; $step <= 20; $step++ ) {
+			$fraction = $step / 20; // 5% increments.
+			$mixed    = array(
+				(int) round( $accent_rgb[0] + ( ( $mix_to - $accent_rgb[0] ) * $fraction ) ),
+				(int) round( $accent_rgb[1] + ( ( $mix_to - $accent_rgb[1] ) * $fraction ) ),
+				(int) round( $accent_rgb[2] + ( ( $mix_to - $accent_rgb[2] ) * $fraction ) ),
+			);
+
+			if ( zaso_pricing_contrast_ratio( zaso_pricing_relative_luminance( $mixed ), $surface_lum ) >= $target ) {
+				return sprintf( '#%02x%02x%02x', $mixed[0], $mixed[1], $mixed[2] );
+			}
+		}
+
+		return ( 255 === $mix_to ) ? '#ffffff' : '#000000';
+	}
+}
+
 if ( ! class_exists( 'Zen_Addons_SiteOrigin_Pricing_Table_Widget' ) ) :
 
 
@@ -86,6 +205,91 @@ class Zen_Addons_SiteOrigin_Pricing_Table_Widget extends SiteOrigin_Widget {
 				'label'   => __( 'Currency Symbol', 'zaso' ),
 				'default' => '$',
 			),
+			'layout' => array(
+				'type'        => 'select',
+				'label'       => __( 'Layout', 'zaso' ),
+				'default'     => 'default',
+				'description' => __( 'Structural layout of the table. The Style skin below still controls colours; Layout controls the shape (card border, shadow, radius, padding, density).', 'zaso' ),
+				'options'     => array(
+					'default'  => __( 'Default (bordered cards)', 'zaso' ),
+					'bordered' => __( 'Bordered (flat connected columns)', 'zaso' ),
+					'elevated' => __( 'Elevated (floating cards, soft shadow)', 'zaso' ),
+					'compact'  => __( 'Compact (dense padding, smaller type)', 'zaso' ),
+				),
+			),
+			'design_style' => array(
+				'type'           => 'presets',
+				'label'          => __( 'Style', 'zaso' ),
+				'default_preset' => '',
+				/**
+				 * Curated design presets ("skins") for this widget. The free core
+				 * ships three; Zen Addons Pro appends its full library via the
+				 * shared `zaso_design_presets` filter (gated on a valid license).
+				 * Selecting one fills the Design fields below; users can still tweak.
+				 */
+				'options'        => apply_filters( 'zaso_design_presets', array(
+					'saas_indigo'   => array(
+						'label'  => __( 'Indigo', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'featured_color'    => '#4f46e5',
+								'card_bg'           => '#ffffff',
+								'text_color'        => '#0f172a',
+								'text_muted'        => '#475569',
+								'card_border'       => '#e2e8f0',
+								'card_radius'       => '12px',
+								'button_bg'         => '#4f46e5',
+								'button_text_color' => '#ffffff',
+							),
+						),
+					),
+					'dark_midnight' => array(
+						'label'  => __( 'Midnight', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'featured_color'    => '#4f46e5',
+								'card_bg'           => '#0f172a',
+								'text_color'        => '#e2e8f0',
+								'text_muted'        => '#94a3b8',
+								'card_border'       => '#334155',
+								'card_radius'       => '14px',
+								'button_bg'         => '#4f46e5',
+								'button_text_color' => '#ffffff',
+							),
+						),
+					),
+					'min_mono'      => array(
+						'label'  => __( 'Mono', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'featured_color'    => '#111111',
+								'card_bg'           => '#ffffff',
+								'text_color'        => '#111111',
+								'text_muted'        => '#6b7280',
+								'card_border'       => '#e5e5e5',
+								'card_radius'       => '8px',
+								'button_bg'         => '#111111',
+								'button_text_color' => '#ffffff',
+							),
+						),
+					),
+					'bold_sunset'   => array(
+						'label'  => __( 'Sunset', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'featured_color'    => '#c2410c',
+								'card_bg'           => '#fff7ed',
+								'text_color'        => '#7c2d12',
+								'text_muted'        => '#9a3412',
+								'card_border'       => '#fed7aa',
+								'card_radius'       => '16px',
+								'button_bg'         => '#c2410c',
+								'button_text_color' => '#ffffff',
+							),
+						),
+					),
+				), 'pricing-table' ),
+			),
 			'design'  => array(
 				'type'   => 'section',
 				'label'  => __( 'Design', 'zaso' ),
@@ -100,6 +304,16 @@ class Zen_Addons_SiteOrigin_Pricing_Table_Widget extends SiteOrigin_Widget {
 						'type'    => 'color',
 						'label'   => __( 'Card Background', 'zaso' ),
 						'default' => '#ffffff',
+					),
+					'text_color'        => array(
+						'type'    => 'color',
+						'label'   => __( 'Text Color', 'zaso' ),
+						'default' => '#111111',
+					),
+					'text_muted'        => array(
+						'type'    => 'color',
+						'label'   => __( 'Muted Text Color', 'zaso' ),
+						'default' => '#6b7280',
 					),
 					'card_border'       => array(
 						'type'    => 'color',
@@ -200,14 +414,26 @@ class Zen_Addons_SiteOrigin_Pricing_Table_Widget extends SiteOrigin_Widget {
 	function get_less_variables( $instance ) {
 		$design = isset( $instance['design'] ) ? $instance['design'] : array();
 
+		$featured_color = isset( $design['featured_color'] ) ? $design['featured_color'] : '#4f46e5';
+		$card_bg        = isset( $design['card_bg'] )        ? $design['card_bg']        : '#ffffff';
+
 		return apply_filters( 'zaso_pricing_table_less_variables', array(
-			'featured_color'    => isset( $design['featured_color'] )    ? $design['featured_color']    : '#4f46e5',
-			'card_bg'           => isset( $design['card_bg'] )           ? $design['card_bg']           : '#ffffff',
+			'featured_color'    => $featured_color,
+			'card_bg'           => $card_bg,
+			'text_color'        => isset( $design['text_color'] )        ? $design['text_color']        : '#111111',
+			'text_muted'        => isset( $design['text_muted'] )        ? $design['text_muted']        : '#6b7280',
 			'card_border'       => isset( $design['card_border'] )       ? $design['card_border']       : '#e5e7eb',
 			'card_radius'       => isset( $design['card_radius'] )       ? $design['card_radius']       : '12px',
 			'button_bg'         => isset( $design['button_bg'] )         ? $design['button_bg']         : '#4f46e5',
 			'button_text_color' => isset( $design['button_text_color'] ) ? $design['button_text_color'] : '#ffffff',
 			'gap'               => isset( $design['gap'] )               ? $design['gap']               : '24px',
+			// Accent reused as an on-surface foreground (check icons, featured
+			// border, focus + elevated rings). Auto-lightened only when the chosen
+			// accent fails contrast on the card surface, so dark skins (e.g.
+			// Midnight indigo on a near-black card) stay readable. Identical to
+			// featured_color whenever the accent already passes, keeping light
+			// skins and the default no-skin output byte-identical.
+			'accent_on_surface' => zaso_pricing_accessible_accent( $featured_color, $card_bg ),
 		) );
 	}
 

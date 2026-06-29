@@ -49,6 +49,111 @@ class Zen_Addons_SiteOrigin_Hover_Card_Widget extends SiteOrigin_Widget {
 					'fadein'  => __( 'Fade In', 'zaso' )
 				)
 			),
+			'layout' => array(
+				'type'        => 'select',
+				'label'       => __( 'Layout', 'zaso' ),
+				'default'     => 'default',
+				'description' => __( 'Structural layout of the card. The Style skin below still controls colours; Layout controls how the image and caption are arranged and how the card reveals on hover.', 'zaso' ),
+				'options'     => array(
+					'default'       => __( 'Default (caption overlay)', 'zaso' ),
+					'caption-below' => __( 'Caption Below (solid panel under image)', 'zaso' ),
+					'slide-up'      => __( 'Slide Up (panel slides up on hover)', 'zaso' ),
+					'zoom'          => __( 'Zoom (image zooms, caption fixed)', 'zaso' ),
+				),
+			),
+			'design_style' => array(
+				'type'           => 'presets',
+				'label'          => __( 'Style', 'zaso' ),
+				'default_preset' => '',
+				/**
+				 * Curated design presets ("skins") for this widget. The free core
+				 * ships three; Zen Addons Pro appends its full library via the
+				 * shared `zaso_design_presets` filter (gated on a valid license).
+				 * Selecting one fills the Design fields below; users can still tweak.
+				 */
+				'options'        => apply_filters( 'zaso_design_presets', array(
+					'saas_indigo' => array(
+						'label'  => __( 'Indigo', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'hover_box' => array(
+									'caption_background_color'   => '#ffffff',
+									'caption_background_opacity' => '95',
+									'caption_font_color'         => '#0f172a',
+								),
+								'modal_button' => array(
+									'button_background_color'        => '#4f46e5',
+									'button_font_color'              => '#ffffff',
+									'button_border_color'            => '#4f46e5',
+									'button_background_color_hover'  => '#ffffff',
+									'button_font_color_hover'        => '#0f172a',
+									'button_border_color_hover'      => '#4f46e5',
+								),
+							),
+						),
+					),
+					'dark_midnight' => array(
+						'label'  => __( 'Midnight', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'hover_box' => array(
+									'caption_background_color'   => '#0f172a',
+									'caption_background_opacity' => '90',
+									'caption_font_color'         => '#e2e8f0',
+								),
+								'modal_button' => array(
+									'button_background_color'        => '#4f46e5',
+									'button_font_color'              => '#ffffff',
+									'button_border_color'            => '#4f46e5',
+									'button_background_color_hover'  => '#0f172a',
+									'button_font_color_hover'        => '#e2e8f0',
+									'button_border_color_hover'      => '#4f46e5',
+								),
+							),
+						),
+					),
+					'min_mono' => array(
+						'label'  => __( 'Mono', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'hover_box' => array(
+									'caption_background_color'   => '#ffffff',
+									'caption_background_opacity' => '95',
+									'caption_font_color'         => '#111111',
+								),
+								'modal_button' => array(
+									'button_background_color'        => '#111111',
+									'button_font_color'              => '#ffffff',
+									'button_border_color'            => '#111111',
+									'button_background_color_hover'  => '#ffffff',
+									'button_font_color_hover'        => '#111111',
+									'button_border_color_hover'      => '#111111',
+								),
+							),
+						),
+					),
+					'bold_sunset' => array(
+						'label'  => __( 'Sunset', 'zaso' ),
+						'values' => array(
+							'design' => array(
+								'hover_box' => array(
+									'caption_background_color'   => '#fff7ed',
+									'caption_background_opacity' => '95',
+									'caption_font_color'         => '#7c2d12',
+								),
+								'modal_button' => array(
+									'button_background_color'        => '#c2410c',
+									'button_font_color'              => '#ffffff',
+									'button_border_color'            => '#c2410c',
+									'button_background_color_hover'  => '#fff7ed',
+									'button_font_color_hover'        => '#7c2d12',
+									'button_border_color_hover'      => '#c2410c',
+								),
+							),
+						),
+					),
+				), 'hover-card' ),
+			),
 			'design' => array(
 				'type' =>  'section',
 				'label' => __( 'Design', 'zaso' ),
@@ -407,40 +512,66 @@ class Zen_Addons_SiteOrigin_Hover_Card_Widget extends SiteOrigin_Widget {
 
 	function get_less_variables( $instance ) {
 
-		// Variable pointers.
-		$design = $instance['design'];
-		$hover_box = $design['hover_box'];
-		$hover_box_margin = $hover_box['caption_margin'];
-		$hover_box_padding = $hover_box['caption_padding'];
-		$hover_card_box_shadow = $hover_box['card_box_shadow'];
+		// Defensive: a design_style preset may fill only some of the design
+		// sub-fields (the colour skins set the caption/button colours but omit
+		// caption_margin, caption_padding, card_box_shadow, button_padding and
+		// several scalar typography fields). Default every missing piece so a
+		// partially-filled preset can never crash the LESS output or emit a
+		// notice. A fully-saved Default instance already carries every key, so
+		// these fallbacks only apply to keys a preset omitted and its output is
+		// byte-identical. Fallback values equal the widget's own field defaults.
+		$design       = isset( $instance['design'] ) && is_array( $instance['design'] ) ? $instance['design'] : array();
+		$hover_box    = isset( $design['hover_box'] ) && is_array( $design['hover_box'] ) ? $design['hover_box'] : array();
+		$modal_button = isset( $design['modal_button'] ) && is_array( $design['modal_button'] ) ? $design['modal_button'] : array();
 
-		$modal_button = $design['modal_button'];
-		$modal_button_padding = $modal_button['button_padding'];
+		$hover_box_margin = wp_parse_args(
+			( isset( $hover_box['caption_margin'] ) && is_array( $hover_box['caption_margin'] ) ) ? $hover_box['caption_margin'] : array(),
+			array( 'top' => '0px', 'right' => '0px', 'bottom' => '0px', 'left' => '0px' )
+		);
+		$hover_box_padding = wp_parse_args(
+			( isset( $hover_box['caption_padding'] ) && is_array( $hover_box['caption_padding'] ) ) ? $hover_box['caption_padding'] : array(),
+			array( 'top' => '10px', 'right' => '10px', 'bottom' => '10px', 'left' => '10px' )
+		);
+		$hover_card_box_shadow = wp_parse_args(
+			( isset( $hover_box['card_box_shadow'] ) && is_array( $hover_box['card_box_shadow'] ) ) ? $hover_box['card_box_shadow'] : array(),
+			array(
+				'horizontal_offset'    => '4px',
+				'vertical_offset'      => '4px',
+				'blur'                 => '6px',
+				'spread'               => '0px',
+				'shadow_color'         => '#000000',
+				'shadow_color_opacity' => '20',
+			)
+		);
+		$modal_button_padding = wp_parse_args(
+			( isset( $modal_button['button_padding'] ) && is_array( $modal_button['button_padding'] ) ) ? $modal_button['button_padding'] : array(),
+			array( 'top' => '11px', 'right' => '21px', 'bottom' => '11px', 'left' => '21px' )
+		);
 
 		return apply_filters( 'zaso_hover_card_less_variables', array(
 			// Hover Box.
-			'caption_background_color' => $hover_box['caption_background_color'],
-			'caption_background_opacity' => $hover_box['caption_background_opacity'],
-			'caption_font_color' => $hover_box['caption_font_color'],
-			'caption_font_size' => $hover_box['caption_font_size'],
-			'caption_font_alignment' => $hover_box['caption_font_alignment'],
-			'caption_font_weight' => $hover_box['caption_font_weight'],
-			'caption_font_transform' => $hover_box['caption_font_transform'],
-			'caption_margin' => 
+			'caption_background_color' => isset( $hover_box['caption_background_color'] ) ? $hover_box['caption_background_color'] : '#000000',
+			'caption_background_opacity' => isset( $hover_box['caption_background_opacity'] ) ? $hover_box['caption_background_opacity'] : '100',
+			'caption_font_color' => isset( $hover_box['caption_font_color'] ) ? $hover_box['caption_font_color'] : '#ffffff',
+			'caption_font_size' => isset( $hover_box['caption_font_size'] ) ? $hover_box['caption_font_size'] : '26px',
+			'caption_font_alignment' => isset( $hover_box['caption_font_alignment'] ) ? $hover_box['caption_font_alignment'] : 'center',
+			'caption_font_weight' => isset( $hover_box['caption_font_weight'] ) ? $hover_box['caption_font_weight'] : '400',
+			'caption_font_transform' => isset( $hover_box['caption_font_transform'] ) ? $hover_box['caption_font_transform'] : 'none',
+			'caption_margin' =>
 				sprintf( '%1$s %2$s %3$s %4$s',
 					$hover_box_margin['top'],
 					$hover_box_margin['right'],
 					$hover_box_margin['bottom'],
-					$hover_box_margin['left'] 
+					$hover_box_margin['left']
 				),
-			'caption_padding' => 
+			'caption_padding' =>
 				sprintf( '%1$s %2$s %3$s %4$s',
 					$hover_box_padding['top'],
 					$hover_box_padding['right'],
 					$hover_box_padding['bottom'],
-					$hover_box_padding['left'] 
+					$hover_box_padding['left']
 				),
-			'hover_card_box_shadow' => 
+			'hover_card_box_shadow' =>
 				sprintf( '%1$s %2$s %3$s %4$s',
 					$hover_card_box_shadow['horizontal_offset'],
 					$hover_card_box_shadow['vertical_offset'],
@@ -450,24 +581,24 @@ class Zen_Addons_SiteOrigin_Hover_Card_Widget extends SiteOrigin_Widget {
 			'hover_card_box_shadow_color' => $hover_card_box_shadow['shadow_color'],
 			'hover_card_box_shadow_opacity' => $hover_card_box_shadow['shadow_color_opacity'],
 			// Modal Button.
-			'modal_background_color' => $modal_button['button_background_color'],
-			'modal_background_color_opacity' => $modal_button['button_background_color_opacity'],
-			'modal_background_color_hover' => $modal_button['button_background_color_hover'],
-			'modal_background_color_opacity_hover' => $modal_button['button_background_color_opacity_hover'],
-			'modal_button_font_color' => $modal_button['button_font_color'],
-			'modal_button_font_color_hover' => $modal_button['button_font_color_hover'],
-			'modal_button_font_size' => $modal_button['button_font_size'],
-			'modal_button_font_weight' => $modal_button['button_font_weight'],
-			'modal_button_font_transform' => $modal_button['button_font_transform'],
-			'modal_button_padding' => 
+			'modal_background_color' => isset( $modal_button['button_background_color'] ) ? $modal_button['button_background_color'] : '#000000',
+			'modal_background_color_opacity' => isset( $modal_button['button_background_color_opacity'] ) ? $modal_button['button_background_color_opacity'] : '100',
+			'modal_background_color_hover' => isset( $modal_button['button_background_color_hover'] ) ? $modal_button['button_background_color_hover'] : '#e4e4e4',
+			'modal_background_color_opacity_hover' => isset( $modal_button['button_background_color_opacity_hover'] ) ? $modal_button['button_background_color_opacity_hover'] : '100',
+			'modal_button_font_color' => isset( $modal_button['button_font_color'] ) ? $modal_button['button_font_color'] : '#ffffff',
+			'modal_button_font_color_hover' => isset( $modal_button['button_font_color_hover'] ) ? $modal_button['button_font_color_hover'] : '#000000',
+			'modal_button_font_size' => isset( $modal_button['button_font_size'] ) ? $modal_button['button_font_size'] : '18px',
+			'modal_button_font_weight' => isset( $modal_button['button_font_weight'] ) ? $modal_button['button_font_weight'] : '400',
+			'modal_button_font_transform' => isset( $modal_button['button_font_transform'] ) ? $modal_button['button_font_transform'] : 'none',
+			'modal_button_padding' =>
 				sprintf( '%1$s %2$s %3$s %4$s',
 					$modal_button_padding['top'],
 					$modal_button_padding['right'],
 					$modal_button_padding['bottom'],
 					$modal_button_padding['left']
 				),
-			'modal_button_border_color' => $modal_button['button_border_color'],
-			'modal_button_border_color_hover' => $modal_button['button_border_color_hover'],
+			'modal_button_border_color' => isset( $modal_button['button_border_color'] ) ? $modal_button['button_border_color'] : '#ffffff',
+			'modal_button_border_color_hover' => isset( $modal_button['button_border_color_hover'] ) ? $modal_button['button_border_color_hover'] : '#e4e4e4',
 		) );
 
 	}
